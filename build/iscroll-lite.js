@@ -52,8 +52,8 @@ var utils = (function () {
 			'MSPointer' + pointerEvent.charAt(7).toUpperCase() + pointerEvent.substr(8):
 			pointerEvent;
 	};
-
-	me.momentum = function (current, start, time, lowerMargin, wrapperSize, deceleration) {
+//(this.y, this.startY, duration, this.maxScrollY, this.options.bounce ? this.wrapperHeight : 0, this.options.deceleration)
+	me.momentum = function (current, start, time, lowerMargin, wrapperSize, deceleration) {//动量
 		var distance = current - start,
 			speed = Math.abs(distance) / time,
 			destination,
@@ -61,14 +61,14 @@ var utils = (function () {
 
 		deceleration = deceleration === undefined ? 0.0006 : deceleration;
 
-		destination = current + ( speed * speed ) / ( 2 * deceleration ) * ( distance < 0 ? -1 : 1 );
+		destination = current + ( speed * speed ) / ( 2 * deceleration ) * ( distance < 0 ? -1 : 1 ); //计算公式 v^2 = 2as
 		duration = speed / deceleration;
 
-		if ( destination < lowerMargin ) {
-			destination = wrapperSize ? lowerMargin - ( wrapperSize / 2.5 * ( speed / 8 ) ) : lowerMargin;
-			distance = Math.abs(destination - current);
-			duration = distance / speed;
-		} else if ( destination > 0 ) {
+		if ( destination < lowerMargin ) {//超界
+			destination = wrapperSize ? lowerMargin - ( wrapperSize / 2.5 * ( speed / 8 ) ) : lowerMargin;//缓冲超出临界的位置
+			distance = Math.abs(destination - current);// 要滚动的距离
+			duration = distance / speed;// 所用时间
+		} else if ( destination > 0 ) {//超界
 			destination = wrapperSize ? wrapperSize / 2.5 * ( speed / 8 ) : 0;
 			distance = Math.abs(current) + destination;
 			duration = distance / speed;
@@ -200,24 +200,24 @@ var utils = (function () {
 	me.extend(me.ease = {}, {
 		quadratic: {
 			style: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-			fn: function (k) {
+			fn: function (k) {// 结尾缓动out
 				return k * ( 2 - k );
 			}
 		},
-		circular: {
+		circular: {// 结尾缓动out
 			style: 'cubic-bezier(0.1, 0.57, 0.1, 1)',	// Not properly "circular" but this looks better, it should be (0.075, 0.82, 0.165, 1)
 			fn: function (k) {
 				return Math.sqrt( 1 - ( --k * k ) );
 			}
 		},
-		back: {
+		back: {// 结尾缓动out
 			style: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
 			fn: function (k) {
 				var b = 4;
 				return ( k = k - 1 ) * k * ( ( b + 1 ) * k + b ) + 1;
 			}
 		},
-		bounce: {
+		bounce: {// 结尾缓动out
 			style: '',
 			fn: function (k) {
 				if ( ( k /= 1 ) < ( 1 / 2.75 ) ) {
@@ -231,7 +231,7 @@ var utils = (function () {
 				}
 			}
 		},
-		elastic: {
+		elastic: {// 结尾缓动out
 			style: '',
 			fn: function (k) {
 				var f = 0.22,
@@ -467,10 +467,10 @@ IScroll.prototype = {
 
 		this.startTime = utils.getTime();
 
-		if ( this.options.useTransition && this.isInTransition ) {
-			this._transitionTime();
+		if ( this.options.useTransition && this.isInTransition ) {// 如果正在滚动
+			this._transitionTime();// 设置 transitionDuration = 0，暂停动画
 			this.isInTransition = false;
-			pos = this.getComputedPosition();
+			pos = this.getComputedPosition();// 获取this.scroller现在的位置-偏移量
 			this._translate(Math.round(pos.x), Math.round(pos.y));
 			this._execEvent('scrollEnd');
 		} else if ( !this.options.useTransition && this.isAnimating ) {
@@ -484,7 +484,12 @@ IScroll.prototype = {
 		this.absStartY = this.y;
 		this.pointX    = point.pageX;
 		this.pointY    = point.pageY;
-
+		/*
+		this.x  scroller滚动的位置
+		this.startX  晚于this.x间隔300毫秒的值
+		this.absStartX  偏移量绝对值
+		this.pointX  接触点在文档的位置
+		*/
 		this._execEvent('beforeScrollStart');
 	},
 
@@ -518,7 +523,7 @@ IScroll.prototype = {
 		}
 
 		// If you are scrolling in one direction lock the other
-		if ( !this.directionLocked && !this.options.freeScroll ) {
+		if ( !this.directionLocked && !this.options.freeScroll ) {// 如果没有锁住防线，而且不是自由滚动模式
 			if ( absDistX > absDistY + this.options.directionLockThreshold ) {
 				this.directionLocked = 'h';		// lock horizontally
 			} else if ( absDistY >= absDistX + this.options.directionLockThreshold ) {
@@ -575,7 +580,7 @@ IScroll.prototype = {
 
 /* REPLACE START: _move */
 
-		if ( timestamp - this.startTime > 300 ) {
+		if ( timestamp - this.startTime > 300 ) {//如果没有这个则就没有惯性滚动了
 			this.startTime = timestamp;
 			this.startX = this.x;
 			this.startY = this.y;
@@ -694,7 +699,7 @@ IScroll.prototype = {
 
 		this.scrollTo(x, y, time, this.options.bounceEasing);
 
-		return true;
+		return true;// 表示超出滚动范围，需要滚回合理范围内
 	},
 
 	disable: function () {
@@ -724,7 +729,7 @@ IScroll.prototype = {
 
 		this.hasHorizontalScroll	= this.options.scrollX && this.maxScrollX < 0;
 		this.hasVerticalScroll		= this.options.scrollY && this.maxScrollY < 0;
-		
+
 		if ( !this.hasHorizontalScroll ) {
 			this.maxScrollX = 0;
 			this.scrollerWidth = this.wrapperWidth;
@@ -738,7 +743,7 @@ IScroll.prototype = {
 		this.endTime = 0;
 		this.directionX = 0;
 		this.directionY = 0;
-		
+
 		if(utils.hasPointer && !this.options.disablePointer) {
 			// The wrapper should have `touchAction` property for using pointerEvent.
 			this.wrapper.style[utils.style.touchAction] = utils.getTouchAction(this.options.eventPassthrough, true);
@@ -757,7 +762,7 @@ IScroll.prototype = {
 
 // INSERT POINT: _refresh
 
-	},	
+	},
 
 	on: function (type, fn) {
 		if ( !this._events[type] ) {
@@ -804,7 +809,7 @@ IScroll.prototype = {
 		this.scrollTo(x, y, time, easing);
 	},
 
-	scrollTo: function (x, y, time, easing) {
+	scrollTo: function (x, y, time, easing) {// 如果没有传 timer, 则相当于调用_translate
 		easing = easing || utils.ease.circular;
 
 		this.isInTransition = this.options.useTransition && time > 0;
@@ -814,7 +819,7 @@ IScroll.prototype = {
 					this._transitionTimingFunction(easing.style);
 					this._transitionTime(time);
 				}
-			this._translate(x, y);
+			this._translate(x, y);// 使用  transition 进行动画
 		} else {
 			this._animate(x, y, time, easing.fn);
 		}
@@ -853,7 +858,7 @@ IScroll.prototype = {
 		this.scrollTo(pos.left, pos.top, time, easing);
 	},
 
-	_transitionTime: function (time) {
+	_transitionTime: function (time) {// 设置transitionDuration时间，如果设置为0，则动画结束
 		if (!this.options.useTransition) {
 			return;
 		}
@@ -910,7 +915,7 @@ IScroll.prototype = {
 
 	},
 
-	_initEvents: function (remove) {
+	_initEvents: function (remove) {// 通过handleEvent绑定事件
 		var eventType = remove ? utils.removeEvent : utils.addEvent,
 			target = this.options.bindToWrapper ? this.wrapper : window;
 
@@ -992,7 +997,7 @@ IScroll.prototype = {
 			newY = ( destY - startY ) * easing + startY;
 			that._translate(newX, newY);
 
-			if ( that.isAnimating ) {
+			if ( that.isAnimating ) {// 如果 不再进行动画，则停止继续滚动
 				rAF(step);
 			}
 		}
