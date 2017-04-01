@@ -67,7 +67,7 @@ var utils = (function () {
 		if ( destination < lowerMargin ) {//超界
 			destination = wrapperSize ? lowerMargin - ( wrapperSize / 2.5 * ( speed / 8 ) ) : lowerMargin;//缓冲超出临界的位置
 			distance = Math.abs(destination - current);// 要滚动的距离
-			duration = distance / speed;// 所用时间
+			duration = distance / speed; //所用时间
 		} else if ( destination > 0 ) {//超界
 			destination = wrapperSize ? wrapperSize / 2.5 * ( speed / 8 ) : 0;
 			distance = Math.abs(current) + destination;
