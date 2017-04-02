@@ -59,16 +59,22 @@ var utils = (function () {
 			destination,
 			duration;
 
-		deceleration = deceleration === undefined ? 0.0006 : deceleration;
+		deceleration = deceleration === undefined ? 0.0006 : deceleration;//减速度
 
-		destination = current + ( speed * speed ) / ( 2 * deceleration ) * ( distance < 0 ? -1 : 1 ); //计算公式 v^2 = 2as
-		duration = speed / deceleration;
+		destination = current + ( speed * speed ) / ( 2 * deceleration ) * ( distance < 0 ? -1 : 1 ); //根据公式 v^2 = 2as 计算 位移
+		duration = speed / deceleration; //根据公式 v = at 计算停下来所需时间
+		//滚动范围是[-xxx, 0]
+		if ( destination < lowerMargin ) {//超左界
+			/*
+				为什么重新调整destination？ 如果不调整，按正常计算的话，destination可能会超出临界的很多，所以通过第一次正常计算，如果destination超出临界值，
+				则重新调整计算，但是要保证2个条件，第一：保证destination还是超出临界值的，但是不要太过；第二：保证计算出的destination与speed成正比关系（忽略方向，也就是正负）；
 
-		if ( destination < lowerMargin ) {//超界
-			destination = wrapperSize ? lowerMargin - ( wrapperSize / 2.5 * ( speed / 8 ) ) : lowerMargin;//缓冲超出临界的位置
-			distance = Math.abs(destination - current);// 要滚动的距离
+				可能有人说既然你怕超过太多，那你为什么不把deceleration大点来控制呢？
+			*/
+			destination = wrapperSize ? lowerMargin - ( wrapperSize / 2.5 * ( speed / 8 ) ) : lowerMargin;
+			distance = Math.abs(destination - current);// 要滚动的偏移量
 			duration = distance / speed; //所用时间
-		} else if ( destination > 0 ) {//超界
+		} else if ( destination > 0 ) {//超右界
 			destination = wrapperSize ? wrapperSize / 2.5 * ( speed / 8 ) : 0;
 			distance = Math.abs(current) + destination;
 			duration = distance / speed;
